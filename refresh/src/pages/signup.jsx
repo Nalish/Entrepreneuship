@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "../assets/styles/signup.css";
+import authService from "../services/authservice.js";
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -9,6 +10,9 @@ function Signup() {
     confirmPassword: "",
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -16,16 +20,42 @@ function Signup() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Frontend-only validation
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
 
-    console.log("Signup Data:", formData);
-    alert("Signup successful!");
+    setIsLoading(true);
+
+    try {
+      // ONLY send fields your backend expects
+      const userData = {
+        fullName: formData.name,
+        email: formData.email,
+        password: formData.password,
+      };
+
+      await authService.register(userData);
+
+      setIsSubmitted(true);
+      alert("User registered successfully!");
+
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error("Register Error:", error);
+      alert("Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -61,6 +91,7 @@ function Signup() {
           required
         />
 
+        {/* Frontend-only field */}
         <input
           type="password"
           name="confirmPassword"
@@ -70,10 +101,18 @@ function Signup() {
           required
         />
 
-        <button type="submit">Sign Up</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Creating account..." : "Sign Up"}
+        </button>
+
+        {isSubmitted && (
+          <p className="success-message">
+            Registration successful! Please log in.
+          </p>
+        )}
 
         <span className="login-text">
-          Already have an account? <a href="/login">Login</a>
+          Already have an account? <a href="/">Login</a>
         </span>
       </form>
     </div>

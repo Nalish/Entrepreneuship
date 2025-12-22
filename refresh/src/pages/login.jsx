@@ -1,11 +1,17 @@
 import React, { useState } from "react";
 import "../assets/styles/Login.css";
+import authService from "../services/authservice";
+import { Link } from "react-router-dom";
+
+
 
 function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -14,11 +20,24 @@ function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    console.log("Login Data:", formData);
-    alert("Login successful!");
+    try {
+      const data = await authService.login(formData);
+      console.log("Login response:", data);
+
+
+      alert("Login successful!");
+      
+    
+    } catch (error) {
+      console.error("Login error:", error);
+      alert(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,10 +64,12 @@ function Login() {
           required
         />
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Logging in..." : "Login"}
+        </button>
 
         <span className="signup-text">
-          Don’t have an account? <a href="/signup">Sign up</a>
+          Create an account:<Link to="/signup">Sign up</Link>
         </span>
       </form>
     </div>
