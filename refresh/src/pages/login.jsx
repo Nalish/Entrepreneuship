@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../assets/styles/Login.css";
 import authService from "../services/authservice";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 
 
 
@@ -19,7 +19,7 @@ function Login() {
       [e.target.name]: e.target.value,
     });
   };
-
+const navigate =useNavigate()
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -30,7 +30,7 @@ function Login() {
 
 
       alert("Login successful!");
-      
+      navigate("/branches")
     
     } catch (error) {
       console.error("Login error:", error);

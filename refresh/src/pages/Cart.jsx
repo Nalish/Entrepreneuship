@@ -1,44 +1,45 @@
+import React from "react";
 import { useCart } from "../Context/CartContext";
+import "../assets/styles/Cart.css";
 
 const Cart = () => {
-  const {
-    cartItems,
-    removeFromCart,
-    updateQuantity,
-    totalAmount,
-  } = useCart();
+  const { cartItems, removeFromCart } = useCart();
 
-  if (!cartItems.length) {
-    return <p>Your cart is empty</p>;
+  const total = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  if (cartItems.length === 0) {
+    return <h2 className="empty-cart">Your cart is empty 🛒</h2>;
   }
 
   return (
-    <div>
-      <h2>Cart</h2>
+    <div className="cart-container">
+      <h2>Your Cart</h2>
 
       {cartItems.map((item) => (
-        <div key={item.id} style={{ marginBottom: "10px" }}>
-          <strong>{item.name}</strong>
-          <p>KES {item.price}</p>
+        <div key={item.stockId} className="cart-item">
+          <div>
+            <h4>{item.name}</h4>
+            <p>Price: KES {item.price}</p>
+            <p>Quantity: {item.quantity}</p>
+          </div>
 
-          <input
-            type="number"
-            min="1"
-            value={item.quantity}
-            onChange={(e) =>
-              updateQuantity(item.id, Number(e.target.value))
-            }
-          />
-
-          <button onClick={() => removeFromCart(item.id)}>
+          <button
+            className="remove-btn"
+            onClick={() => removeFromCart(item.stockId)}
+          >
             Remove
           </button>
         </div>
       ))}
 
-      <h3>Total: KES {totalAmount.toFixed(2)}</h3>
+      <h3 className="total">Total: KES {total}</h3>
 
-      <button>Checkout</button>
+      <button className="checkout-btn">
+        Proceed to Checkout
+      </button>
     </div>
   );
 };

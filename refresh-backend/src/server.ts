@@ -6,6 +6,12 @@ import cors from "cors"
 import { AppDataSource } from "./data-source"
 import authRoutes from "../src/routes/authRoutes"
 import productRoutes from "../src/routes/productRoutes"
+import branchRoutes from "./routes/branchRoutes"
+import paymentRoutes from "./routes/paymentRoutes"
+import saleItemRoutes from "./routes/saleItemRoutes"
+import saleRoutes from "./routes/saleRoutes"
+import stockRoutes from "./routes/stockRoutes"
+import userRoutes from './routes/userRoutes'
 
 
 //configure the dotenv
@@ -21,7 +27,7 @@ app.use(cookieParser()) || 3001
 
 //CORS configuration
 app.use(cors({
-    origin:"http://localhost:5174",
+    origin:"http://localhost:5173",
     methods:"GET,PUT,DELETE,POST,PATCH",
     credentials:true
 }))
@@ -37,6 +43,12 @@ AppDataSource.initialize()
 
     app.use("/api/auth",authRoutes)
     app.use("/api/products",productRoutes)
+    app.use("/api/branch",branchRoutes)
+    app.use("/api/payment",paymentRoutes)
+    app.use("/api/item",saleItemRoutes)
+    app.use("/api/sale",saleRoutes)
+    app.use("/api/stock",stockRoutes)
+    app.use("/api/user",userRoutes)
     
    
     
