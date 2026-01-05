@@ -7,39 +7,32 @@ const Branches = () => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const userName = "Jane";
+  const navigate = useNavigate();
 
-  const userName= "Jane"
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/branch", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setBranches(response.data.branches || response.data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load branches");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:3001/api/branch",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
-        // if your backend returns { branches: [...] }
-        setBranches(response.data.branches || response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load branches");
-        setLoading(false);
-      }
-    };
-
     fetchBranches();
   }, []);
 
-  const navigate=useNavigate()
   const handleSelectedBranch = (branch) => {
     navigate(`/products/${branch.id}`, {
-      state: {
-        branchName: branch.name,
-      },
+      state: { branchName: branch.name },
     });
   };
 
@@ -51,37 +44,49 @@ const Branches = () => {
       <header className="header">
         <div className="logo">REFRESH</div>
         <div className="welcome">Welcome, {userName}</div>
-       
       </header>
-    
-    <div style={styles.container}>
-      {branches.map((branch) => (
-        <div key={branch.id} style={styles.card}>
-          <h3>{branch.name}</h3>
-          <p><strong>Location:</strong> {branch.location}</p>
 
-          <p>
-            <strong>Stock Items:</strong>{" "}
-            {branch.stock ? branch.stock.length : 0}
-          </p>
+      <div style={styles.container}>
+        {branches.map((branch) => (
+          <div key={branch.id} style={styles.card}>
+            <h3>{branch.name}</h3>
+            <p><strong>Location:</strong> {branch.location}</p>
 
-          <p>
-            <strong>Sales Made:</strong>{" "}
-            {branch.sales ? branch.sales.length : 0}
-          </p>
-          <p>
-            <button className="branchBTN" onClick={() =>handleSelectedBranch(branch)}>Select Branch</button>
-          </p>
-        </div>
-      ))}
-    </div>
+            {/* Total quantity of stock items */}
+            <p>
+              <strong>Stock Items:</strong>{" "}
+              {branch.stock
+                ? branch.stock.reduce((sum, s) => sum + s.quantity, 0)
+                : 0}
+            </p>
+
+            {/* Total items sold */}
+            <p>
+              <strong>Sales Made:</strong>{" "}
+              {branch.sales
+                ? branch.sales.reduce(
+                    (total, sale) =>
+                      total +
+                      (sale.items
+                        ? sale.items.reduce((sum, i) => sum + i.quantity, 0)
+                        : 0),
+                    0
+                  )
+                : 0}
+            </p>
+
+            <button className="branchBTN" onClick={() => handleSelectedBranch(branch)}>
+              Select Branch
+            </button>
+          </div>
+        ))}
+      </div>
     </>
   );
 };
 
 export default Branches;
 
-/* Inline styles (you can move these to CSS) */
 const styles = {
   container: {
     display: "grid",

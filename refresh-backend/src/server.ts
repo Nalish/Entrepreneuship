@@ -12,6 +12,7 @@ import saleItemRoutes from "./routes/saleItemRoutes"
 import saleRoutes from "./routes/saleRoutes"
 import stockRoutes from "./routes/stockRoutes"
 import userRoutes from './routes/userRoutes'
+import checkoutRoutes from "./routes/checkoutRoutes"
 
 
 //configure the dotenv
@@ -49,6 +50,7 @@ AppDataSource.initialize()
     app.use("/api/sale",saleRoutes)
     app.use("/api/stock",stockRoutes)
     app.use("/api/user",userRoutes)
+    app.use("/api/checkout",checkoutRoutes)
     
    
     
