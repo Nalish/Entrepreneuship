@@ -5,6 +5,7 @@ import Login from "./pages/login";
 import Products from "./pages/Products";
 import Branches from "./pages/Branches";
 import { CartProvider } from "./Context/CartContext";
+import AdminDashboard from "./admin/adminDashboard";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/branches" element={<Branches />} />
           <Route path="/products/:branchId" element={<Products />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </CartProvider>
     
