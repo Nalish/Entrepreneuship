@@ -23,25 +23,40 @@ export class CheckoutController {
     try {
       const sale = await AppDataSource.transaction(async (manager) => {
 
-        // 1. Validate stock
-        for (const item of items) {
-          const stock = await manager.findOne(Stock, {
-            where: {
-              product: { id: item.productId },
-              branch: { id: branchId },
-            },
-            relations: ["product", "branch"],
-          });
+        // 1. Validate customer and branch exist
+        const customer = await manager.findOne(User, { where: { id: customerId } });
+        if (!customer) {
+          throw new Error(`Customer with ID ${customerId} not found`);
+        }
 
-          if (!stock || stock.quantity < item.quantity) {
-            throw new Error(`Insufficient stock for product ${item.productId}`);
+        const branch = await manager.findOne(Branch, { where: { id: branchId } });
+        if (!branch) {
+          throw new Error(`Branch with ID ${branchId} not found`);
+        }
+
+        // 2. Validate stock
+        for (const item of items) {
+          const stock = await manager
+            .createQueryBuilder(Stock, "stock")
+            .leftJoinAndSelect("stock.product", "product")
+            .leftJoinAndSelect("stock.branch", "branch")
+            .where("product.id = :productId", { productId: item.productId })
+            .andWhere("branch.id = :branchId", { branchId: branchId })
+            .getOne();
+
+          if (!stock) {
+            throw new Error(`No stock found for product ${item.productId} in branch ${branchId}`);
+          }
+
+          if (stock.quantity < item.quantity) {
+            throw new Error(`Insufficient stock for product ${item.productId}. Available: ${stock.quantity}, Requested: ${item.quantity}`);
           }
         }
 
-        // 2. Create Sale
+        // 3. Create Sale
         const sale = manager.create(Sale, {
-          customer: { id: customerId } as User,
-          branch: { id: branchId } as Branch,
+          customer,
+          branch,
           totalAmount: items.reduce(
             (sum: number, i: any) => sum + i.unitPrice * i.quantity,
             0
@@ -50,7 +65,7 @@ export class CheckoutController {
 
         await manager.save(sale);
 
-        // 3. Create SaleItems + reduce stock
+        // 4. Create SaleItems + reduce stock
         for (const item of items) {
           const saleItem = manager.create(SaleItem, {
             sale,

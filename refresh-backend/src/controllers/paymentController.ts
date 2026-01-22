@@ -2,12 +2,13 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { Payment, PaymentMethod } from "../entities/Payment";
 import { Sale } from "../entities/Sale";
+import { mpesaService } from "../services/mpesaService";
 
 export class PaymentController {
   // CREATE PAYMENT
   static async createPayment(req: Request, res: Response) {
     try {
-      const { saleId, amount, method } = req.body;
+      const { saleId, amount, method, phoneNumber } = req.body;
 
       if (!saleId || amount === undefined || !method) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -18,20 +19,29 @@ export class PaymentController {
         return res.status(400).json({ message: "Invalid payment method" });
       }
 
+      // Validate M-Pesa requirements
+      if (method === PaymentMethod.MPESA && !phoneNumber) {
+        return res.status(400).json({ message: "Phone number required for M-Pesa" });
+      }
+
       const paymentRepo = AppDataSource.getRepository(Payment);
       const saleRepo = AppDataSource.getRepository(Sale);
 
       const sale = await saleRepo.findOne({
         where: { id: saleId },
-        relations: ["payments"],
       });
 
       if (!sale) {
         return res.status(404).json({ message: "Sale not found" });
       }
 
-      // Optional: prevent overpayment
-      const totalPaid = sale.payments.reduce(
+      // Get payments without relations to avoid column issues
+      const payments = await paymentRepo.find({
+        where: { sale: { id: saleId } },
+      });
+
+      // Calculate total paid
+      const totalPaid = payments.reduce(
         (sum, payment) => sum + Number(payment.amount),
         0
       );
@@ -47,6 +57,29 @@ export class PaymentController {
         amount,
         method,
       });
+
+      // Handle M-Pesa payment initiation
+      if (method === PaymentMethod.MPESA) {
+        try {
+          const stkResponse = await mpesaService.initiateSTKPush(
+            phoneNumber,
+            amount,
+            sale.id.toString(),
+            `Payment for Sale ${sale.id}`
+          );
+
+          payment.mpesaCheckoutRequestId = stkResponse.CheckoutRequestID;
+          payment.mpesaMerchantRequestId = stkResponse.MerchantRequestID;
+        } catch (error: any) {
+          // Log full error and return clearer details to client
+          console.error("M-Pesa error:", error);
+          const details = error?.response?.data || error?.message || String(error);
+          return res.status(500).json({
+            message: "Payment initiation failed",
+            details,
+          });
+        }
+      }
 
       await paymentRepo.save(payment);
 

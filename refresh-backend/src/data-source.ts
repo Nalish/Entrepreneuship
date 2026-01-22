@@ -16,8 +16,8 @@ export const AppDataSource = new DataSource({
   logging: false,
 
   // ✅ Load entities by path (no imports)
-  entities: ["src/entities/**/*.ts"],
+  entities: ["dist/entities/**/*.js"],
 
   // ✅ Load migrations by path
-  migrations: ["src/migrations/**/*.ts"],
+  migrations: ["dist/migrations/**/*.js"],
 });

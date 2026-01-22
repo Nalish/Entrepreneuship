@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useLocation } from "react-router-dom";
 import { useCart } from "../Context/CartContext";
+import { useUser } from "../Context/UserContext";
 import "../assets/styles/Products.css";
 import CartModal from "../components/CartModal";
 
@@ -9,6 +10,7 @@ const Products = () => {
   const { branchId } = useParams();
   const location = useLocation();
   const { addToCart, cartItems } = useCart();
+  const { user, loading: userLoading } = useUser();
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [stocks, setStocks] = useState([]);
@@ -16,7 +18,6 @@ const Products = () => {
   const [error, setError] = useState("");
 
   const branchName = location.state?.branchName || "Branch";
-  const userName = "Jane";
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
@@ -53,12 +54,7 @@ const Products = () => {
       branchId: Number(branchId),
     });
 
-    // Optional: reduce stock locally for instant feedback
-    setStocks((prev) =>
-      prev.map((s) =>
-        s.id === stock.id ? { ...s, quantity: s.quantity - 1 } : s
-      )
-    );
+    // Don't reduce stock locally here - let checkout handle it
   };
 
   const handleCheckoutUpdateStock = (checkoutItems) => {
@@ -80,7 +76,7 @@ const Products = () => {
     <div className={`products-container ${isCartOpen ? "modal-open" : ""}`}>
       <header className="header">
         <div className="logo">REFRESH</div>
-        <div className="welcome">Welcome, {userName}</div>
+        <div className="welcome">Welcome, {userLoading ? "Loading..." : user?.fullName || "Guest"}</div>
 
         <button className="cart-btn" onClick={() => setIsCartOpen(true)}>
           🛒 Cart {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
@@ -113,6 +109,8 @@ const Products = () => {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         onCheckout={handleCheckoutUpdateStock}
+        branchId={Number(branchId)}
+        customerId={user?.id}
       />
     </div>
   );

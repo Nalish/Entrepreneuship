@@ -31,6 +31,12 @@ export class Payment {
   @CreateDateColumn()
   paymentDate!: Date;
 
+  @Column({ type: "varchar", nullable: true, unique: true })
+  mpesaCheckoutRequestId?: string;
+
+  @Column({ type: "varchar", nullable: true })
+  mpesaMerchantRequestId?: string;
+
   @ManyToOne(() => Sale, (sale) => sale.payments, {
     onDelete: "CASCADE",
   })

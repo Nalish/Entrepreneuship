@@ -1,0 +1,54 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Sale = void 0;
+// src/entities/Sale.ts
+const typeorm_1 = require("typeorm");
+const User_1 = require("./User");
+const Branch_1 = require("./Branch");
+const SaleItem_1 = require("./SaleItem");
+const Payment_1 = require("./Payment");
+let Sale = class Sale {
+};
+exports.Sale = Sale;
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], Sale.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)(),
+    __metadata("design:type", Date)
+], Sale.prototype, "saleDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)("decimal", { precision: 10, scale: 2 }),
+    __metadata("design:type", Number)
+], Sale.prototype, "totalAmount", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => User_1.User, (user) => user.sales),
+    __metadata("design:type", User_1.User)
+], Sale.prototype, "customer", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => Branch_1.Branch, (branch) => branch.sales),
+    __metadata("design:type", Branch_1.Branch)
+], Sale.prototype, "branch", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => SaleItem_1.SaleItem, (item) => item.sale, {
+        cascade: true,
+    }),
+    __metadata("design:type", Array)
+], Sale.prototype, "items", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Payment_1.Payment, (payment) => payment.sale),
+    __metadata("design:type", Array)
+], Sale.prototype, "payments", void 0);
+exports.Sale = Sale = __decorate([
+    (0, typeorm_1.Entity)()
+], Sale);

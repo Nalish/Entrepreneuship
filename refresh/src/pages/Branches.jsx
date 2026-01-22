@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../assets/styles/Branches.css"; 
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../Context/UserContext";
 
 const Branches = () => {
+  const { user, loading: userLoading } = useUser();
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const userName = "Jane";
   const navigate = useNavigate();
 
   const fetchBranches = async () => {
@@ -43,7 +44,7 @@ const Branches = () => {
     <>
       <header className="header">
         <div className="logo">REFRESH</div>
-        <div className="welcome">Welcome, {userName}</div>
+        <div className="welcome">Welcome, {userLoading ? "Loading..." : user?.fullName || "Guest"}</div>
       </header>
 
       <div style={styles.container}>

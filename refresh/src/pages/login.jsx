@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import "../assets/styles/Login.css";
 import authService from "../services/authservice";
-import { Link,useNavigate } from "react-router-dom";
-
-
+import { Link, useNavigate } from "react-router-dom";
+import { useUser } from "../Context/UserContext";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -12,14 +11,15 @@ function Login() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-
+  const navigate = useNavigate();
+  const { refetchUser } = useUser();
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
-const navigate =useNavigate()
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -28,9 +28,20 @@ const navigate =useNavigate()
       const data = await authService.login(formData);
       console.log("Login response:", data);
 
+      // Store userId and token in localStorage
+      if (data.user?.id) {
+        localStorage.setItem("userId", data.user.id);
+      }
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
 
       alert("Login successful!");
-      navigate("/branches")
+      
+      // Refetch user data immediately
+      await refetchUser();
+      
+      navigate("/branches");
     
     } catch (error) {
       console.error("Login error:", error);

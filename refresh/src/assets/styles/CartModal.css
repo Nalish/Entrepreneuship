@@ -101,3 +101,110 @@
   color: #777;
   margin-top: 20px;
 }
+/* PAYMENT FORM */
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.payment-summary {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid #1e90ff;
+}
+
+.payment-summary p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+  color: #2f3640;
+}
+
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payment-methods label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-methods label:hover {
+  border-color: #1e90ff;
+  background: #f0f7ff;
+}
+
+.payment-methods input[type="radio"] {
+  cursor: pointer;
+}
+
+.payment-methods span {
+  font-weight: 500;
+  color: #2f3640;
+}
+
+.mpesa-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mpesa-input label {
+  font-weight: 600;
+  color: #2f3640;
+  font-size: 0.9rem;
+}
+
+.mpesa-input input {
+  padding: 10px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border 0.2s ease;
+}
+
+.mpesa-input input:focus {
+  outline: none;
+  border-color: #1e90ff;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.back-btn {
+  flex: 1;
+  padding: 10px;
+  background: #ddd;
+  color: #2f3640;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.back-btn:hover {
+  background: #bbb;
+}
+
+.checkout-btn {
+  flex: 1;
+}
+
+.checkout-btn:disabled,
+.back-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
