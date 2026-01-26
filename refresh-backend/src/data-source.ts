@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import dotenv from "dotenv";
 import { DataSource } from "typeorm";
+import path from "path"
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ export const AppDataSource = new DataSource({
   logging: false,
 
   // ✅ Load entities by path (no imports)
-  entities: ["dist/entities/**/*.js"],
+  entities: [path.join(__dirname, "/entities/**/*.ts")],
 
   // ✅ Load migrations by path
   migrations: ["dist/migrations/**/*.js"],
