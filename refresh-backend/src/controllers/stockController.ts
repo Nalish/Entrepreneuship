@@ -6,59 +6,78 @@ import { Branch } from "../entities/Branch";
 
 export class StockController {
   // CREATE / ADD STOCK
-  static async createStock(req: Request, res: Response) {
-    try {
-      const { productId, branchId, quantity } = req.body;
+ static async createStock(req: Request, res: Response) {
+  try {
+    const { productId, branchId, quantity } = req.body;
 
-      if (!productId || !branchId || quantity === undefined) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
+    if (!productId || !branchId || quantity === undefined) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
-      const stockRepo = AppDataSource.getRepository(Stock);
-      const productRepo = AppDataSource.getRepository(Product);
-      const branchRepo = AppDataSource.getRepository(Branch);
+    const stockRepo = AppDataSource.getRepository(Stock);
+    const productRepo = AppDataSource.getRepository(Product);
+    const branchRepo = AppDataSource.getRepository(Branch);
 
-      const product = await productRepo.findOneBy({ id: productId });
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
-      }
+    const product = await productRepo.findOneBy({ id: productId });
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
-      const branch = await branchRepo.findOneBy({ id: branchId });
-      if (!branch) {
-        return res.status(404).json({ message: "Branch not found" });
-      }
+    const branch = await branchRepo.findOneBy({ id: branchId });
+    if (!branch) return res.status(404).json({ message: "Branch not found" });
 
-      // Check if stock already exists for product + branch
-      let stock = await stockRepo.findOne({
-        where: {
-          product: { id: productId },
-          branch: { id: branchId },
-        },
-        relations: ["product", "branch"],
-      });
+    // Find HQ stock for this product
+    const hq = await branchRepo.findOne({ where: { isHQ: true } });
+    if (!hq) return res.status(500).json({ message: "HQ branch not found" });
 
+    const hqStock = await stockRepo.findOne({
+      where: { product: { id: productId }, branch: { id: hq.id } },
+    });
+
+    // If we are restocking HQ itself
+    if (branch.id === hq.id) {
+      let stock = hqStock;
       if (stock) {
-        // Increase quantity
         stock.quantity += quantity;
       } else {
-        stock = stockRepo.create({
-          product,
-          branch,
-          quantity,
-        });
+        stock = stockRepo.create({ product, branch, quantity });
       }
-
       await stockRepo.save(stock);
-
-      return res.status(201).json({
-        message: "Stock saved successfully",
-        stock,
-      });
-    } catch (error) {
-      console.error("Create stock error:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(201).json({ message: "HQ stock updated", stock });
     }
+
+    // For other branches, deduct from HQ
+    if (!hqStock || hqStock.quantity < quantity) {
+      return res.status(400).json({ message: "Not enough HQ stock to transfer" });
+    }
+
+    // Deduct HQ stock
+    hqStock.quantity -= quantity;
+    await stockRepo.save(hqStock);
+
+    // Add stock to branch
+    let branchStock = await stockRepo.findOne({
+      where: { product: { id: productId }, branch: { id: branch.id } },
+    });
+
+    if (branchStock) {
+      branchStock.quantity += quantity;
+    } else {
+      branchStock = stockRepo.create({ product, branch, quantity });
+    }
+
+    await stockRepo.save(branchStock);
+
+    return res.status(201).json({
+      message: `Transferred ${quantity} from HQ to ${branch.name}`,
+      branchStock,
+      hqStock,
+    });
+
+  } catch (error) {
+    console.error("Create stock error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
+}
+
 
   // GET ALL STOCK
   static async getAllStock(req: Request, res: Response) {
