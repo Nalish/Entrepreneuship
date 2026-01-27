@@ -45,7 +45,7 @@ function Signup() {
       await authService.register(userData);
 
       setIsSubmitted(true);
-     navigate("/login")
+     navigate("/")
 
       setFormData({
         name: "",
