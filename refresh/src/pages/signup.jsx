@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../assets/styles/signup.css";
 import authService from "../services/authService"
+import { useNavigate } from "react-router-dom";
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -10,9 +11,11 @@ function Signup() {
     confirmPassword: "",
   });
 
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
+ 
+  const navigate =useNavigate()
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -42,7 +45,7 @@ function Signup() {
       await authService.register(userData);
 
       setIsSubmitted(true);
-     Navigate("/login")
+     navigate("/login")
 
       setFormData({
         name: "",
