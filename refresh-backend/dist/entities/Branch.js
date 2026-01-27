@@ -30,6 +30,10 @@ __decorate([
     __metadata("design:type", String)
 ], Branch.prototype, "location", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], Branch.prototype, "isHQ", void 0);
+__decorate([
     (0, typeorm_1.OneToMany)(() => Stock_1.Stock, (stock) => stock.branch),
     __metadata("design:type", Array)
 ], Branch.prototype, "stock", void 0);

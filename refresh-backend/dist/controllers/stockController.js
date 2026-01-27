@@ -17,36 +17,52 @@ class StockController {
             const productRepo = data_source_1.AppDataSource.getRepository(Product_1.Product);
             const branchRepo = data_source_1.AppDataSource.getRepository(Branch_1.Branch);
             const product = await productRepo.findOneBy({ id: productId });
-            if (!product) {
+            if (!product)
                 return res.status(404).json({ message: "Product not found" });
-            }
             const branch = await branchRepo.findOneBy({ id: branchId });
-            if (!branch) {
+            if (!branch)
                 return res.status(404).json({ message: "Branch not found" });
-            }
-            // Check if stock already exists for product + branch
-            let stock = await stockRepo.findOne({
-                where: {
-                    product: { id: productId },
-                    branch: { id: branchId },
-                },
-                relations: ["product", "branch"],
+            // Find HQ stock for this product
+            const hq = await branchRepo.findOne({ where: { isHQ: true } });
+            if (!hq)
+                return res.status(500).json({ message: "HQ branch not found" });
+            const hqStock = await stockRepo.findOne({
+                where: { product: { id: productId }, branch: { id: hq.id } },
             });
-            if (stock) {
-                // Increase quantity
-                stock.quantity += quantity;
+            // If we are restocking HQ itself
+            if (branch.id === hq.id) {
+                let stock = hqStock;
+                if (stock) {
+                    stock.quantity += quantity;
+                }
+                else {
+                    stock = stockRepo.create({ product, branch, quantity });
+                }
+                await stockRepo.save(stock);
+                return res.status(201).json({ message: "HQ stock updated", stock });
+            }
+            // For other branches, deduct from HQ
+            if (!hqStock || hqStock.quantity < quantity) {
+                return res.status(400).json({ message: "Not enough HQ stock to transfer" });
+            }
+            // Deduct HQ stock
+            hqStock.quantity -= quantity;
+            await stockRepo.save(hqStock);
+            // Add stock to branch
+            let branchStock = await stockRepo.findOne({
+                where: { product: { id: productId }, branch: { id: branch.id } },
+            });
+            if (branchStock) {
+                branchStock.quantity += quantity;
             }
             else {
-                stock = stockRepo.create({
-                    product,
-                    branch,
-                    quantity,
-                });
+                branchStock = stockRepo.create({ product, branch, quantity });
             }
-            await stockRepo.save(stock);
+            await stockRepo.save(branchStock);
             return res.status(201).json({
-                message: "Stock saved successfully",
-                stock,
+                message: `Transferred ${quantity} from HQ to ${branch.name}`,
+                branchStock,
+                hqStock,
             });
         }
         catch (error) {
