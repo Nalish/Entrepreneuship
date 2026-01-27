@@ -24,7 +24,7 @@ const Products = () => {
   const fetchBranchStock = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/stock/branch/${branchId}`,
+        `https://refresh-backend-v9ti.onrender.com/api/stock/branch/${branchId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
