@@ -20,8 +20,8 @@ const SalesProgress = () => {
   const fetchData = async () => {
     try {
       const [salesRes, itemsRes] = await Promise.all([
-        axios.get("http://localhost:3001/api/sale"),
-        axios.get("http://localhost:3001/api/item")
+        axios.get("https://refresh-backend-v9ti.onrender.com/api/sale"),
+        axios.get("https://refresh-backend-v9ti.onrender.com/api/item")
       ]);
 
       setSales(salesRes.data);

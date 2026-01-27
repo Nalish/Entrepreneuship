@@ -21,17 +21,17 @@ const StockManagement = () => {
   }, []);
 
   const fetchBranches = async () => {
-    const res = await axios.get("http://localhost:3001/api/branch");
+    const res = await axios.get("https://refresh-backend-v9ti.onrender.com/api/branch");
     setBranches(res.data);
   };
 
   const fetchProducts = async () => {
-    const res = await axios.get("http://localhost:3001/api/products");
+    const res = await axios.get("https://refresh-backend-v9ti.onrender.com/api/products");
     setProducts(res.data);
   };
 
   const fetchStocks = async () => {
-    const res = await axios.get("http://localhost:3001/api/stock");
+    const res = await axios.get("https://refresh-backend-v9ti.onrender.com/api/stock");
     setStocks(res.data);
   };
 
@@ -49,9 +49,9 @@ const StockManagement = () => {
     };
 
     if (form.id) {
-      await axios.put(`http://localhost:3001/api/stock/${form.id}`, payload);
+      await axios.put(`https://refresh-backend-v9ti.onrender.com/api/stock/${form.id}`, payload);
     } else {
-      await axios.post("http://localhost:3001/api/stock", payload);
+      await axios.post("https://refresh-backend-v9ti.onrender.com/api/stock", payload);
     }
 
     setForm({ id: null, productId: "", branchId: "", quantity: "" });
