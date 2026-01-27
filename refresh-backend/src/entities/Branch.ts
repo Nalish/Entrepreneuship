@@ -19,6 +19,11 @@ export class Branch {
   @Column()
   location!: string;
 
+  // src/entities/Branch.ts
+@Column({ default: false })
+isHQ!: boolean;
+
+
   @OneToMany(() => Stock, (stock) => stock.branch)
   stock!: Stock[];
 
