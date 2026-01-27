@@ -13,7 +13,7 @@ const Branches = () => {
 
   const fetchBranches = async () => {
     try {
-      const response = await axios.get("http://localhost:3001/api/branch", {
+      const response = await axios.get("https://refresh-backend-v9ti.onrender.com/api/branch", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
