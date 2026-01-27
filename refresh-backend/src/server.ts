@@ -15,7 +15,10 @@ import stockRoutes from "./routes/stockRoutes";
 import userRoutes from "./routes/userRoutes";
 import checkoutRoutes from "./routes/checkoutRoutes";
 
-dotenv.config();
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
+
 
 const app = express();
 
