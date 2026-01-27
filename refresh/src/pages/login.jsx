@@ -36,8 +36,7 @@ function Login() {
         localStorage.setItem("token", data.token);
       }
 
-      alert("Login successful!");
-      
+
       // Refetch user data immediately
       await refetchUser();
       
