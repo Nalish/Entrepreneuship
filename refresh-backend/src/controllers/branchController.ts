@@ -65,33 +65,49 @@ export class BranchController {
     }
   }
 
-  // UPDATE BRANCH
-  static async updateBranch(req: Request, res: Response) {
-    try {
-      const { id } = req.params;
-      const { name, location } = req.body;
+ // UPDATE BRANCH
+// PATCH / UPDATE BRANCH
+static async updateBranch(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const { name, location, isHQ } = req.body; // Partial update allowed
 
-      const branchRepo = AppDataSource.getRepository(Branch);
-      const branch = await branchRepo.findOneBy({ id: Number(id) });
+    const branchRepo = AppDataSource.getRepository(Branch);
+    const branch = await branchRepo.findOneBy({ id: Number(id) });
 
-      if (!branch) {
-        return res.status(404).json({ message: "Branch not found" });
-      }
-
-      if (name !== undefined) branch.name = name;
-      if (location !== undefined) branch.location = location;
-
-      await branchRepo.save(branch);
-
-      return res.status(200).json({
-        message: "Branch updated successfully",
-        branch,
-      });
-    } catch (error) {
-      console.error("Update branch error:", error);
-      return res.status(500).json({ message: "Internal server error" });
+    if (!branch) {
+      return res.status(404).json({ message: "Branch not found" });
     }
+
+    // Update only the fields that were sent
+    if (name !== undefined) branch.name = name;
+    if (location !== undefined) branch.location = location;
+
+    if (isHQ !== undefined) {
+      if (isHQ) {
+        // If this branch is being set as HQ, unset HQ for all other branches
+        await branchRepo
+          .createQueryBuilder()
+          .update(Branch)
+          .set({ isHQ: false })
+          .where("id != :id", { id: branch.id })
+          .execute();
+      }
+      branch.isHQ = isHQ;
+    }
+
+    await branchRepo.save(branch);
+
+    return res.status(200).json({
+      message: "Branch updated successfully",
+      branch,
+    });
+  } catch (error) {
+    console.error("Patch branch error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
+}
+
 
   // DELETE BRANCH
   static async deleteBranch(req: Request, res: Response) {

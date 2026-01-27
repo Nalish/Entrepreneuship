@@ -9,7 +9,7 @@ const router = Router();
 router.post("/",upload.none(), BranchController.createBranch);
 router.get("/", BranchController.getAllBranches);
 router.get("/:id", BranchController.getBranchById);
-router.put("/:id",upload.none(), BranchController.updateBranch);
+router.patch("/:id",upload.none(), BranchController.updateBranch);
 router.delete("/:id", BranchController.deleteBranch);
 
 export default router;
