@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../assets/styles/signup.css";
-import authService from "../services/authservice.js";
+import authService from "../services/authService"
 
 function Signup() {
   const [formData, setFormData] = useState({
