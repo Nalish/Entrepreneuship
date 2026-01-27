@@ -5,6 +5,7 @@ const StockManagement = () => {
   const [stocks, setStocks] = useState([]);
   const [branches, setBranches] = useState([]);
   const [products, setProducts] = useState([]);
+  const [hqStock, setHqStock] = useState([]);
 
   const [selectedBranch, setSelectedBranch] = useState("");
   const [form, setForm] = useState({
@@ -33,6 +34,10 @@ const StockManagement = () => {
   const fetchStocks = async () => {
     const res = await axios.get("https://refresh-backend-v9ti.onrender.com/api/stock");
     setStocks(res.data);
+
+    // Extract HQ stock separately
+    const hq = res.data.filter(s => s.branch.isHQ);
+    setHqStock(hq);
   };
 
   const filteredStocks = selectedBranch
@@ -48,19 +53,47 @@ const StockManagement = () => {
       quantity: Number(form.quantity)
     };
 
-    if (form.id) {
-      await axios.put(`https://refresh-backend-v9ti.onrender.com/api/stock/${form.id}`, payload);
-    } else {
-      await axios.post("https://refresh-backend-v9ti.onrender.com/api/stock", payload);
-    }
+    try {
+      if (form.id) {
+        await axios.put(`https://refresh-backend-v9ti.onrender.com/api/stock/${form.id}`, payload);
+      } else {
+        await axios.post("https://refresh-backend-v9ti.onrender.com/api/stock", payload);
+      }
 
-    setForm({ id: null, productId: "", branchId: "", quantity: "" });
-    fetchStocks();
+      setForm({ id: null, productId: "", branchId: "", quantity: "" });
+      fetchStocks();
+    } catch (error) {
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("An error occurred while updating stock");
+      }
+    }
   };
 
   return (
     <div>
       <h2>Branch Stock Management</h2>
+
+      <h3>HQ Stock</h3>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {hqStock.map(stock => (
+            <tr key={stock.id}>
+              <td>{stock.product.name}</td>
+              <td>{stock.quantity}</td>
+              <td>{stock.quantity < 5 ? "Low Stock" : "OK"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       <select
         value={selectedBranch}
@@ -79,9 +112,11 @@ const StockManagement = () => {
           required
         >
           <option value="">Select Branch</option>
-          {branches.map(b => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
+          {branches
+            .filter(b => !b.isHQ) // Can't restock HQ manually
+            .map(b => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
         </select>
 
         <select
@@ -101,6 +136,7 @@ const StockManagement = () => {
           value={form.quantity}
           onChange={(e) => setForm({ ...form, quantity: e.target.value })}
           required
+          min="1"
         />
 
         <button type="submit">
@@ -108,6 +144,7 @@ const StockManagement = () => {
         </button>
       </form>
 
+      <h3>Branch Stocks</h3>
       <table border="1">
         <thead>
           <tr>
@@ -118,7 +155,9 @@ const StockManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredStocks.map(stock => (
+          {filteredStocks
+            .filter(s => !s.branch.isHQ) // Don't duplicate HQ rows
+            .map(stock => (
             <tr key={stock.id}>
               <td>{stock.branch.name}</td>
               <td>{stock.product.name}</td>
