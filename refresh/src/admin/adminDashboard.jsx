@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import StockManagement from "./StockManagement";
+import StockManagement from "./stockManagement";
 import SalesProgress from "./SalesProgress";
 import "../assets/styles/AdminDashboard.css";
 
