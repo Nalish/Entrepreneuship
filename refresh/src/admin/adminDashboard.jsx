@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import StockManagement from "./stockManagement";
 import SalesProgress from "./SalesProgress";
 import "../assets/styles/AdminDashboard.css";
+import StockManagement from './stockManagement';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("stocks");
