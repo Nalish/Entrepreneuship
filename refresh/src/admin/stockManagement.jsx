@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const API = "https://refresh-backend-v9ti.onrender.com/api";
+
 const StockManagement = () => {
   const [stocks, setStocks] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -8,8 +10,13 @@ const StockManagement = () => {
   const [hqStock, setHqStock] = useState([]);
 
   const [selectedBranch, setSelectedBranch] = useState("");
-  const [form, setForm] = useState({
-    id: null,
+
+  const [hqForm, setHqForm] = useState({
+    productId: "",
+    quantity: ""
+  });
+
+  const [transferForm, setTransferForm] = useState({
     productId: "",
     branchId: "",
     quantity: ""
@@ -22,21 +29,20 @@ const StockManagement = () => {
   }, []);
 
   const fetchBranches = async () => {
-    const res = await axios.get("https://refresh-backend-v9ti.onrender.com/api/branch");
+    const res = await axios.get(`${API}/branch`);
     setBranches(res.data);
   };
 
   const fetchProducts = async () => {
-    const res = await axios.get("https://refresh-backend-v9ti.onrender.com/api/products");
+    const res = await axios.get(`${API}/products`);
     setProducts(res.data);
   };
 
   const fetchStocks = async () => {
-    const res = await axios.get("https://refresh-backend-v9ti.onrender.com/api/stock");
+    const res = await axios.get(`${API}/stock`);
     setStocks(res.data);
 
-    // Extract HQ stock separately
-    const hq = res.data.filter(s => s.branch.isHQ);
+    const hq = res.data.filter(s => s.branch.isHQ === true);
     setHqStock(hq);
   };
 
@@ -44,38 +50,44 @@ const StockManagement = () => {
     ? stocks.filter(s => s.branch.id === Number(selectedBranch))
     : stocks;
 
-  const handleSubmit = async (e) => {
+  // ---------- HQ STOCK ----------
+  const handleHQStock = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      productId: form.productId,
-      branchId: form.branchId,
-      quantity: Number(form.quantity)
-    };
+    await axios.post(`${API}/stock/hq`, {
+      productId: Number(hqForm.productId),
+      quantity: Number(hqForm.quantity)
+    });
+
+    setHqForm({ productId: "", quantity: "" });
+    fetchStocks();
+  };
+
+  // ---------- TRANSFER ----------
+  const handleTransfer = async (e) => {
+    e.preventDefault();
 
     try {
-      if (form.id) {
-        await axios.put(`https://refresh-backend-v9ti.onrender.com/api/stock/${form.id}`, payload);
-      } else {
-        await axios.post("https://refresh-backend-v9ti.onrender.com/api/stock", payload);
-      }
+      await axios.post(`${API}/stock/transfer`, {
+        productId: Number(transferForm.productId),
+        branchId: Number(transferForm.branchId),
+        quantity: Number(transferForm.quantity)
+      });
 
-      setForm({ id: null, productId: "", branchId: "", quantity: "" });
+      setTransferForm({ productId: "", branchId: "", quantity: "" });
       fetchStocks();
-    } catch (error) {
-      if (error.response?.data?.message) {
-        alert(error.response.data.message);
-      } else {
-        alert("An error occurred while updating stock");
-      }
+
+    } catch (err) {
+      alert(err.response?.data?.message || "Transfer failed");
     }
   };
 
   return (
     <div>
-      <h2>Branch Stock Management</h2>
+      <h2>Stock Management System</h2>
 
-      <h3>HQ Stock</h3>
+      {/* ---------- HQ TABLE ---------- */}
+      <h3>HQ Warehouse</h3>
       <table border="1">
         <thead>
           <tr>
@@ -89,39 +101,18 @@ const StockManagement = () => {
             <tr key={stock.id}>
               <td>{stock.product.name}</td>
               <td>{stock.quantity}</td>
-              <td>{stock.quantity < 5 ? "Low Stock" : "OK"}</td>
+              <td>{stock.quantity < 5 ? "Low" : "OK"}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <select
-        value={selectedBranch}
-        onChange={(e) => setSelectedBranch(e.target.value)}
-      >
-        <option value="">All Branches</option>
-        {branches.map(b => (
-          <option key={b.id} value={b.id}>{b.name}</option>
-        ))}
-      </select>
-
-      <form onSubmit={handleSubmit}>
+      {/* ---------- HQ FORM ---------- */}
+      <h4>Stock HQ (Supplier → Warehouse)</h4>
+      <form onSubmit={handleHQStock}>
         <select
-          value={form.branchId}
-          onChange={(e) => setForm({ ...form, branchId: e.target.value })}
-          required
-        >
-          <option value="">Select Branch</option>
-          {branches
-            .filter(b => !b.isHQ) // Can't restock HQ manually
-            .map(b => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-        </select>
-
-        <select
-          value={form.productId}
-          onChange={(e) => setForm({ ...form, productId: e.target.value })}
+          value={hqForm.productId}
+          onChange={e => setHqForm({ ...hqForm, productId: e.target.value })}
           required
         >
           <option value="">Select Product</option>
@@ -132,19 +123,67 @@ const StockManagement = () => {
 
         <input
           type="number"
-          placeholder="Quantity"
-          value={form.quantity}
-          onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-          required
           min="1"
+          placeholder="Quantity"
+          value={hqForm.quantity}
+          onChange={e => setHqForm({ ...hqForm, quantity: e.target.value })}
+          required
         />
 
-        <button type="submit">
-          {form.id ? "Update Stock" : "Add Stock"}
-        </button>
+        <button type="submit">Stock HQ</button>
       </form>
 
-      <h3>Branch Stocks</h3>
+      <hr />
+
+      {/* ---------- TRANSFER FORM ---------- */}
+      <h4>Transfer Stock (HQ → Branch)</h4>
+      <form onSubmit={handleTransfer}>
+        <select
+          value={transferForm.branchId}
+          onChange={e => setTransferForm({ ...transferForm, branchId: e.target.value })}
+          required
+        >
+          <option value="">Select Branch</option>
+          {branches.filter(b => !b.isHQ).map(b => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+
+        <select
+          value={transferForm.productId}
+          onChange={e => setTransferForm({ ...transferForm, productId: e.target.value })}
+          required
+        >
+          <option value="">Select Product</option>
+          {products.map(p => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          min="1"
+          placeholder="Quantity"
+          value={transferForm.quantity}
+          onChange={e => setTransferForm({ ...transferForm, quantity: e.target.value })}
+          required
+        />
+
+        <button type="submit">Transfer</button>
+      </form>
+
+      {/* ---------- BRANCH TABLE ---------- */}
+      <h3>Branch Stock</h3>
+      <select
+        value={selectedBranch}
+        onChange={e => setSelectedBranch(e.target.value)}
+      >
+        <option value="">All Branches</option>
+        {branches.filter(b => !b.isHQ).map(b => (
+          <option key={b.id} value={b.id}>{b.name}</option>
+        ))}
+      </select>
+
       <table border="1">
         <thead>
           <tr>
@@ -156,15 +195,15 @@ const StockManagement = () => {
         </thead>
         <tbody>
           {filteredStocks
-            .filter(s => !s.branch.isHQ) // Don't duplicate HQ rows
+            .filter(s => !s.branch.isHQ)
             .map(stock => (
-            <tr key={stock.id}>
-              <td>{stock.branch.name}</td>
-              <td>{stock.product.name}</td>
-              <td>{stock.quantity}</td>
-              <td>{stock.quantity < 5 ? "Low Stock" : "OK"}</td>
-            </tr>
-          ))}
+              <tr key={stock.id}>
+                <td>{stock.branch.name}</td>
+                <td>{stock.product.name}</td>
+                <td>{stock.quantity}</td>
+                <td>{stock.quantity < 5 ? "Low" : "OK"}</td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

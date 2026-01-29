@@ -77,6 +77,56 @@ export class StockController {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+// POST /api/stock/hq
+static async stockHQ(req: Request, res: Response) {
+  try {
+    const { productId, quantity } = req.body;
+
+    if (!productId || quantity === undefined) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    const stockRepo = AppDataSource.getRepository(Stock);
+    const productRepo = AppDataSource.getRepository(Product);
+    const branchRepo = AppDataSource.getRepository(Branch);
+
+    const product = await productRepo.findOneBy({ id: Number(productId) });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const hq = await branchRepo.findOne({ where: { isHQ: true } });
+    if (!hq) return res.status(500).json({ message: "HQ not found" });
+
+    let hqStock = await stockRepo.findOne({
+      where: {
+        product: { id: product.id },
+        branch: { id: hq.id },
+      },
+      relations: ["product", "branch"],
+    });
+
+    if (hqStock) {
+      hqStock.quantity += Number(quantity);
+    } else {
+      hqStock = stockRepo.create({
+        product,
+        branch: hq,
+        quantity: Number(quantity),
+      });
+    }
+
+    await stockRepo.save(hqStock);
+
+    return res.status(201).json({
+      message: "HQ stocked successfully",
+      hqStock,
+    });
+
+  } catch (err) {
+    console.error("HQ stock error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
 
 
   // GET ALL STOCK
