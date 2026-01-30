@@ -68,7 +68,7 @@ const StockManagement = () => {
     e.preventDefault();
 
     try {
-      await axios.post(`${API}/stock/transfer`, {
+      await axios.post(`${API}/stock`, {
         productId: Number(transferForm.productId),
         branchId: Number(transferForm.branchId),
         quantity: Number(transferForm.quantity)
